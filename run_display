@@ -1,0 +1,3 @@
+#!/bin/sh
+
+sudo python3 mx-screen.py --led-cols=128 --led-rows=32 -c 1

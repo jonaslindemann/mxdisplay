@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Motocross Sign Control</title>
+    <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Titillium Web', sans-serif;
+        }
+
+        .button {
+            background-color: #4CAF50;
+            /* Green */
+            border: none;
+            color: white;
+            padding: 8px 8px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            -webkit-transition-duration: 0.4s;
+            /* Safari */
+            transition-duration: 0.4s;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .button1 {
+            background-color: #4CAF50;
+            color: white;
+            border: 2px solid #4CAF50;
+        }
+
+        .button1:hover {
+            background-color: white;
+            color: black;
+        }
+
+        .button2 {
+            background-color: white;
+            color: black;
+            border: 2px solid #008CBA;
+        }
+
+        .button2:hover {
+            background-color: #008CBA;
+            color: white;
+        }
+
+        .button3 {
+            background-color: white;
+            color: black;
+            border: 2px solid #f44336;
+        }
+
+        .button3:hover {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .button4 {
+            background-color: white;
+            color: black;
+            border: 2px solid #e7e7e7;
+        }
+
+        .button4:hover {
+            background-color: #e7e7e7;
+        }
+
+        .button5 {
+            background-color: white;
+            color: black;
+            border: 2px solid #555555;
+        }
+
+        .button5:hover {
+            background-color: #555555;
+            color: white;
+        }
+
+        input[type=text],
+        select {
+            width: 100%;
+            padding: 12px 20px;
+            margin: 8px 0;
+            display: inline-block;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        div {
+            border-radius: 5px;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>MX Skylt 0.1 - Kontrollpanel</h1>
+    <h2>Skyltlägen</h2>
+    <button class="button button1" onclick="window.location.href = '/command/time_left';">Träningstid kvar</button>
+    <button class="button button1" onclick="window.location.href = '/command/time';">Klocka</button>
+    <button class="button button1" onclick="window.location.href = '/command/info';">Info</button>
+    <button class="button button1" onclick="window.location.href = '/command/warn';">Varning</button>
+    <button class="button button1" onclick="window.location.href = '/command/off';">Stäng display</button>
+    <h2>Ändra egenskaper</h2>
+    <form method="POST" action="/set_info_text">
+        Text för informationsdisplay <input type="text" name="info_text">
+        <input class="button button1" type="submit" value="Uppdatera">
+    </form>
+    <br>
+    <form method="POST" action="/set_warn_text">
+        Text för varningsdisplay <input type="text" name="warn_text">
+        <input class="button button1" type="submit" value="Uppdatera">
+    </form>
+    <!--
+    <form action="/command/time_left">
+        <button type="submit">Time left</button>
+    </form>
+    <form action="/command/time">
+        <button type="submit">Time</button>
+    </form>
+    <form action="/command/off">
+        <button type="submit">Off</button>
+    </form>
+    -->
+</body>
+
+</html>
