@@ -1,0 +1,15 @@
+[Unit]
+Description=MX-Display
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u mx-screen.py --led-cols=128 --led-rows=32 -c 1
+WorkingDirectory=/home/pi/Development/mxdisplay
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=root
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

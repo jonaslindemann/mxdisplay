@@ -1,11 +1,25 @@
 #!/usr/bin/env python3
+
 from samplebase import SampleBase
 from rgbmatrix import graphics
 import time
 from datetime import datetime
 from math import *
 
+import socket
 import zmq
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
 
 class StatusDisplay:
 
@@ -15,15 +29,26 @@ class StatusDisplay:
     DM_WARNING_TEXT = 3
     DM_TIME = 4
     DM_CLOSED = 5
+    DM_STARTUP = 6
+    DM_ONE_LAP = 7
+    DM_TWO_LAP = 8
+    DM_FINISH = 9
 
+
+    MX_VERSION = "1.0.0"
 
     def __init__(self, canvas, graphics):
-        self.display_mode = StatusDisplay.DM_TIME_LEFT
+
+        self.ip = get_ip()
+        
+        print(self.ip)
+
+        self.display_mode = StatusDisplay.DM_STARTUP
         self.canvas = canvas
         self.graphics = graphics
 
         self.font = self.graphics.Font()
-        self.font.LoadFont("fonts/8x13B.bdf")
+        self.font.LoadFont("fonts/7x13.bdf")
 
         self.large_font = self.graphics.Font()
         self.large_font.LoadFont("fonts/10x20.bdf")
@@ -45,6 +70,8 @@ class StatusDisplay:
         self.training_back = graphics.Color(128, 0, 0)
         self.training_bar = graphics.Color(0, 255, 0)      
         self.training_text = graphics.Color(0, 0, 0)  
+        self.white = graphics.Color(220,220,220)
+        self.black = graphics.Color(0,0,0)
 
         self.hour_color = graphics.Color(255,0,0)    
         self.minute_color = graphics.Color(0,255,0)
@@ -159,6 +186,26 @@ class StatusDisplay:
         self.draw_rect(1, 1, 126, 30, self.warn_border)
         self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.warn_color, self.warning_text)
 
+    def draw_startup(self):
+        self.graphics.DrawText(self.canvas, self.font, 4, 11, self.time_color, self.ip+":5000")
+        self.graphics.DrawText(self.canvas, self.font, 4, 30, self.time_color, "mxdisplay-"+self.MX_VERSION)
+
+    def draw_lap_left(self, laps_left, offset):
+        self.draw_filled_rect(48, 0, 79, 31, self.white)
+        self.graphics.DrawText(self.canvas, self.extra_large_font, 59+offset, 28, self.black, str(laps_left))
+
+    def draw_finish(self):
+        offset = 0
+        for y in range(32):
+            if y % 4 == 0:
+                if offset == 0:
+                    offset = 4
+                else:
+                    offset = 0
+
+            for x in range(0,128,8):
+                self.graphics.DrawLine(self.canvas, x+offset, y, x+3+offset, y, self.white)
+
     def draw(self):
         if self.display_mode == StatusDisplay.DM_TIME_LEFT:
             self.draw_half_hour()
@@ -171,8 +218,16 @@ class StatusDisplay:
             self.draw_info_text()
         elif self.display_mode == StatusDisplay.DM_WARNING_TEXT:
             self.draw_warn_text()
+        elif self.display_mode == StatusDisplay.DM_STARTUP:
+            self.draw_startup()
         elif self.display_mode == StatusDisplay.DM_OFF:
             pass
+        elif self.display_mode == StatusDisplay.DM_ONE_LAP:
+            self.draw_lap_left(1, 0)
+        elif self.display_mode == StatusDisplay.DM_TWO_LAP:
+            self.draw_lap_left(2, -3)
+        elif self.display_mode == StatusDisplay.DM_FINISH:
+            self.draw_finish()
 
 class MxDisplay(SampleBase):
     def __init__(self, *args, **kwargs):
@@ -186,7 +241,7 @@ class MxDisplay(SampleBase):
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         
         status_display = StatusDisplay(offscreen_canvas, graphics)
-        status_display.display_mode = StatusDisplay.DM_TIME
+        status_display.display_mode = StatusDisplay.DM_STARTUP
 
         while True:
 
@@ -209,6 +264,18 @@ class MxDisplay(SampleBase):
                 elif message == "warn":
                     print("Switchiong to DM_WARNING_TEXT")
                     status_display.display_mode = StatusDisplay.DM_WARNING_TEXT
+                elif message == "one_lap":
+                    print("Switching to DM_ONE_LAP")
+                    status_display.display_mode = StatusDisplay.DM_ONE_LAP
+                elif message == "two_lap":
+                    print("Switching to DM_TWO_LAP")
+                    status_display.display_mode = StatusDisplay.DM_TWO_LAP
+                elif message == "finish":
+                    print("Switching to DM_FINISH")
+                    status_display.display_mode = StatusDisplay.DM_FINISH
+                elif message == "startup":
+                    print("Switching to DM_STARTUP")
+                    status_display.display_mode = StatusDisplay.DM_STARTUP
                 elif message == "set_info_text":
                     print("set_info_text:")
                     self.socket.send_string("OK")
@@ -233,12 +300,13 @@ class MxDisplay(SampleBase):
             status_display.canvas = offscreen_canvas
             status_display.draw()
             
-            #time.sleep(0.1)
+            time.sleep(0.01)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
             
             
 # Main function
 if __name__ == "__main__":
+
     mx_display = MxDisplay()
     if (not mx_display.process()):
         mx_display.print_help()
