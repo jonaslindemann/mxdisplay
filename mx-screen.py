@@ -33,9 +33,11 @@ class StatusDisplay:
     DM_ONE_LAP = 7
     DM_TWO_LAP = 8
     DM_FINISH = 9
+    DM_TIME_QUALIFY = 10
+    DM_TIME_LEFT_20 = 11
 
 
-    MX_VERSION = "1.0.0"
+    MX_VERSION = "1.0.1"
 
     def __init__(self, canvas, graphics):
 
@@ -131,6 +133,36 @@ class StatusDisplay:
             else:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
 
+    def draw_twenty_minutes(self):
+        #self.draw_rect(0, 0, 63, 31, self.time_color)
+        now = datetime.now()
+        
+        minute = now.minute
+        if minute <= 20:
+            left_minutes = 20 - minute
+        elif minute <= 40:
+            left_minutes = 40 - minute
+        else:
+            left_minutes = 60 - minute
+            
+        #print(minute, now.second)
+        
+        left_seconds = 59-now.second
+        #if left_seconds == 60:
+        #    left_seconds = 0
+                
+        time_str = "%02i:%02i" % (left_minutes, left_seconds)
+
+        seconds_left = left_minutes*60.0 + left_seconds
+
+        if left_minutes > 1:
+            self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+        else:
+            if now.second % 2 == 0:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+            else:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
+
     def draw_line_angular(self, x0, y0, r, angle, color):
         x1 = x0 + r*cos(angle)
         y1 = y0 + r*sin(angle)
@@ -187,12 +219,17 @@ class StatusDisplay:
         self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.warn_color, self.warning_text)
 
     def draw_startup(self):
+        self.ip = get_ip()
         self.graphics.DrawText(self.canvas, self.font, 4, 11, self.time_color, self.ip+":5000")
         self.graphics.DrawText(self.canvas, self.font, 4, 30, self.time_color, "mxdisplay-"+self.MX_VERSION)
 
     def draw_lap_left(self, laps_left, offset):
-        self.draw_filled_rect(48, 0, 79, 31, self.white)
+        self.draw_filled_rect(0, 0, 127, 31, self.white)
         self.graphics.DrawText(self.canvas, self.extra_large_font, 59+offset, 28, self.black, str(laps_left))
+
+    def draw_time_qualify(self):
+        self.draw_filled_rect(0, 0, 127, 31, self.white)
+        self.graphics.DrawText(self.canvas, self.extra_large_font, 40, 28, self.black, "Tidskval")
 
     def draw_finish(self):
         offset = 0
@@ -209,6 +246,9 @@ class StatusDisplay:
     def draw(self):
         if self.display_mode == StatusDisplay.DM_TIME_LEFT:
             self.draw_half_hour()
+            self.draw_clock()
+        elif self.display_mode == StatusDisplay.DM_TIME_LEFT_20:
+            self.draw_twenty_minutes()
             self.draw_clock()
         elif self.display_mode == StatusDisplay.DM_CLOSED:
             pass
@@ -228,6 +268,8 @@ class StatusDisplay:
             self.draw_lap_left(2, -3)
         elif self.display_mode == StatusDisplay.DM_FINISH:
             self.draw_finish()
+        elif self.display_mode == StatusDisplay.DM_TIME_QUALIFY:
+            self.draw_time_qualify()
 
 class MxDisplay(SampleBase):
     def __init__(self, *args, **kwargs):
@@ -252,6 +294,9 @@ class MxDisplay(SampleBase):
                 if message == "time_left":
                     print("Switching to DM_TIME_LEFT")
                     status_display.display_mode = StatusDisplay.DM_TIME_LEFT
+                elif message == "time_left_twenty":
+                    print("Switching to DM_TIME_LEFT")
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_20
                 elif message == "time":
                     print("Switching to DM_TIME")
                     status_display.display_mode = StatusDisplay.DM_TIME
@@ -273,6 +318,9 @@ class MxDisplay(SampleBase):
                 elif message == "finish":
                     print("Switching to DM_FINISH")
                     status_display.display_mode = StatusDisplay.DM_FINISH
+                elif message == "qualify":
+                    print("Switching to DM_TIME_QUALIFY")
+                    status_display.display_mode = StatusDisplay.DM_TIME_QUALIFY
                 elif message == "startup":
                     print("Switching to DM_STARTUP")
                     status_display.display_mode = StatusDisplay.DM_STARTUP
