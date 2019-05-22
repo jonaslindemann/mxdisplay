@@ -66,13 +66,13 @@ class StatusDisplay:
         self.info_color = graphics.Color(255, 255, 255)
         self.info_background = graphics.Color(0, 0, 140)
         self.warn_color = graphics.Color(0, 0, 0)
-        self.warn_background = graphics.Color(255, 255, 0)
-        self.warn_border = graphics.Color(255, 0, 0)
+        self.warn_background = graphics.Color(200, 200, 0)
+        self.warn_border = graphics.Color(200, 0, 0)
         self.time_over_color = graphics.Color(255, 0, 0)
         self.training_back = graphics.Color(128, 0, 0)
         self.training_bar = graphics.Color(0, 255, 0)      
         self.training_text = graphics.Color(0, 0, 0)  
-        self.white = graphics.Color(220,220,220)
+        self.white = graphics.Color(230,230,230)
         self.black = graphics.Color(0,0,0)
 
         self.hour_color = graphics.Color(255,0,0)    
@@ -225,11 +225,10 @@ class StatusDisplay:
 
     def draw_lap_left(self, laps_left, offset):
         self.draw_filled_rect(0, 0, 127, 31, self.white)
-        self.graphics.DrawText(self.canvas, self.extra_large_font, 59+offset, 28, self.black, str(laps_left))
+        self.graphics.DrawText(self.canvas, self.extra_large_font, 20+offset, 28, self.black, str(laps_left)+" VARV")
 
     def draw_time_qualify(self):
-        self.draw_filled_rect(0, 0, 127, 31, self.white)
-        self.graphics.DrawText(self.canvas, self.extra_large_font, 40, 28, self.black, "Tidskval")
+        self.graphics.DrawText(self.canvas, self.extra_large_font, 10, 28, self.white, "Tidskval")
 
     def draw_finish(self):
         offset = 0
@@ -348,7 +347,7 @@ class MxDisplay(SampleBase):
             status_display.canvas = offscreen_canvas
             status_display.draw()
             
-            time.sleep(0.01)
+            time.sleep(0.1)
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
             
             

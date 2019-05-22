@@ -9,6 +9,8 @@
     <style>
         body {
             font-family: 'Titillium Web', sans-serif;
+            background-color: black;
+            color: white;
         }
 
         .button {
@@ -85,25 +87,27 @@
 
         input[type=text],
         select {
-            width: 100%;
+            width: 50%;
             padding: 12px 20px;
             margin: 8px 0;
             display: inline-block;
             border: 1px solid #ccc;
             border-radius: 4px;
             box-sizing: border-box;
+            background-color:#555555;
+            color:white;
         }
 
         div {
             border-radius: 5px;
-            background-color: #f2f2f2;
+            background-color:#555555;
             padding: 20px;
         }
     </style>
 </head>
 
 <body>
-    <h1>MX Skylt 0.1 - Kontrollpanel</h1>
+    <h1>MXDisplay 1.0.1 - Kontrollpanel</h1>
     <h2>Allmänt</h2>
     <button class="button button1" onclick="window.location.href = '/command/startup';">IP-info</button>
     <button class="button button1" onclick="window.location.href = '/command/off';">Stäng display</button>
@@ -120,12 +124,12 @@
     <button class="button button1" onclick="window.location.href = '/command/finish';">Målflagg</button>
     <h2>Ändra egenskaper</h2>
     <form method="POST" action="/set_info_text">
-        Text för informationsdisplay <input type="text" name="info_text">
+        Text för informationsdisplay <br> <input type="text" name="info_text">
         <input class="button button1" type="submit" value="Uppdatera">
     </form>
     <br>
     <form method="POST" action="/set_warn_text">
-        Text för varningsdisplay <input type="text" name="warn_text">
+        Text för varningsdisplay<br> <input type="text" name="warn_text">
         <input class="button button1" type="submit" value="Uppdatera">
     </form>
     <!--
