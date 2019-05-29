@@ -37,7 +37,7 @@ class StatusDisplay:
     DM_TIME_LEFT_20 = 11
 
 
-    MX_VERSION = "1.0.1"
+    MX_VERSION = "1.0.2"
 
     def __init__(self, canvas, graphics):
 
@@ -46,14 +46,19 @@ class StatusDisplay:
         print(self.ip)
 
         self.display_mode = StatusDisplay.DM_STARTUP
+        self.default_mode = StatusDisplay.DM_TIME_LEFT
         self.canvas = canvas
         self.graphics = graphics
+
+        self.elapsed_time = 0.0
+        self.startup_delay = 60
+        self.startup_finished = False
 
         self.font = self.graphics.Font()
         self.font.LoadFont("fonts/7x13.bdf")
 
         self.large_font = self.graphics.Font()
-        self.large_font.LoadFont("fonts/10x20.bdf")
+        self.large_font.LoadFont("fonts/9x18B.bdf")
 
         self.huge_font = self.graphics.Font()
         self.huge_font.LoadFont("fonts/Bahnschrift_large.bdf")
@@ -208,15 +213,15 @@ class StatusDisplay:
 
     def draw_info_text(self):
         self.draw_filled_rect(0, 0, 127, 31, self.info_background)
+        self.graphics.DrawText(self.canvas, self.large_font, 10, 22, self.info_color, self.info_text)
         self.draw_rect(0, 0, 127, 31, self.info_color)
         self.draw_rect(1, 1, 126, 30, self.info_color)
-        self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.info_color, self.info_text)
     
     def draw_warn_text(self):
         self.draw_filled_rect(0, 0, 127, 31, self.warn_background)
+        self.graphics.DrawText(self.canvas, self.large_font, 10, 22, self.warn_color, self.warning_text)
         self.draw_rect(0, 0, 127, 31, self.warn_border)
         self.draw_rect(1, 1, 126, 30, self.warn_border)
-        self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.warn_color, self.warning_text)
 
     def draw_startup(self):
         self.ip = get_ip()
@@ -230,17 +235,23 @@ class StatusDisplay:
     def draw_time_qualify(self):
         self.graphics.DrawText(self.canvas, self.extra_large_font, 10, 28, self.white, "Tidskval")
 
-    def draw_finish(self):
-        offset = 0
+    def draw_finish(self, invert=False):
+        
+        if invert:
+            offset = 8
+        else:
+            offset = 0
+
+        sq_size = 8
         for y in range(32):
-            if y % 4 == 0:
+            if y % sq_size == 0:
                 if offset == 0:
-                    offset = 4
+                    offset = sq_size
                 else:
                     offset = 0
 
-            for x in range(0,128,8):
-                self.graphics.DrawLine(self.canvas, x+offset, y, x+3+offset, y, self.white)
+            for x in range(0,128,sq_size*2):
+                self.graphics.DrawLine(self.canvas, x+offset, y, x+(sq_size-1)+offset, y, self.white)
 
     def draw(self):
         if self.display_mode == StatusDisplay.DM_TIME_LEFT:
@@ -266,7 +277,11 @@ class StatusDisplay:
         elif self.display_mode == StatusDisplay.DM_TWO_LAP:
             self.draw_lap_left(2, -3)
         elif self.display_mode == StatusDisplay.DM_FINISH:
-            self.draw_finish()
+            now = datetime.now()
+            if now.second % 2 == 0:
+                self.draw_finish(True)
+            else:
+                self.draw_finish(False)
         elif self.display_mode == StatusDisplay.DM_TIME_QUALIFY:
             self.draw_time_qualify()
 
@@ -289,6 +304,8 @@ class MxDisplay(SampleBase):
             try:
                 message = self.socket.recv_string(flags=zmq.NOBLOCK)
                 print("Message received: ", message)
+
+                status_display.startup_finished = True                
 
                 if message == "time_left":
                     print("Switching to DM_TIME_LEFT")
@@ -346,8 +363,17 @@ class MxDisplay(SampleBase):
             
             status_display.canvas = offscreen_canvas
             status_display.draw()
+
+            # Check if startup delay is completed and switch
+            # to default mode
+            
+            if (status_display.elapsed_time > status_display.startup_delay) and not status_display.startup_finished:
+               status_display.startup_finished = True 
+               status_display.display_mode = status_display.default_mode
             
             time.sleep(0.1)
+            status_display.elapsed_time += 0.1
+
             offscreen_canvas = self.matrix.SwapOnVSync(offscreen_canvas)
             
             
