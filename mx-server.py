@@ -29,7 +29,11 @@ def set_info_text():
 
         socket.close()
 
-        return redirect(url_for('start_page'))
+        #return redirect(url_for('start_page'))
+        return render_template('index.html')
+    else:
+        return render_template('index.html')
+        
 
 @app.route('/set_warn_text', methods=['GET', 'POST'])
 def set_warn_text():
@@ -51,7 +55,10 @@ def set_warn_text():
 
         socket.close()
 
-        return redirect(url_for('start_page'))
+        #return redirect(url_for('start_page'))
+        return render_template('index.html')
+    else:
+        return render_template('index.html')
 
 @app.route("/command/<cmd>")
 def command(cmd):
