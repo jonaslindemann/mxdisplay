@@ -23,7 +23,7 @@ You will need the following hardware to implement the sign:
  
 # Example of installation
 
-![Example of a completed sign](/images/mxsign1.png)
+![Example of a completed sign](https://github.com/jonaslindemann/mxdisplay/blob/master/images/mxsign1.jpg)
 
 # Installation
 
