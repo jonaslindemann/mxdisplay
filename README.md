@@ -10,6 +10,20 @@ The project consists of 2 parts:
 
  * Display-server (mx-screen.py) driving the LED panel. It uses the ZeroMQ library to implement a simple socket-server listening for commands from a client application.
  * Web-server (mx-server.py) implemented using Flask acting as the client application. Issues commands to the Display-server.
+ 
+# Parts list
+
+You will need the following hardware to implement the sign:
+
+ * Raspberry Pi 3/4 with 16 GB SD card.
+ * RGB Matrix Bonnet - https://www.adafruit.com/product/3211
+ * 4 32x32 LED Matrices - https://www.adafruit.com/product/1484 (or equivalent)
+ * Powersupply - https://www.kjell.com/se/produkter/el-verktyg/stromforsorjning/nataggregat/ac-dc/fast-utspanning/mean-well-switchat-nataggregat-5-v-(dc)-90-w-p44815
+ * Casing of own design.
+ 
+# Example of installation
+
+![Example of a completed sign](/images/mxsign1.png)
 
 # Installation
 
