@@ -1,11 +1,34 @@
 #!/usr/bin/env python3
+"""
+Status display socket server
+
+This module implements the control logic of the LED display. Control
+of the display is implemented as a simple socket server implemented 
+using ZeroMQ.
+"""
+
+#
+# Copyright 2019 Jonas Lindemann
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
 from samplebase import SampleBase
 from rgbmatrix import graphics
-import time
 from datetime import datetime
 from math import *
 
+import time
 import socket
 import zmq
 
@@ -22,6 +45,7 @@ def get_ip():
     return IP
 
 class StatusDisplay:
+    """Main class implementing the control of the LED display"""
 
     DM_OFF = 0
     DM_TIME_LEFT = 1
@@ -37,10 +61,10 @@ class StatusDisplay:
     DM_TIME_LEFT_20 = 11
     DM_TIMING = 12
 
-
     MX_VERSION = "1.0.3"
 
     def __init__(self, canvas, graphics):
+        """Class constructor"""
 
         self.ip = get_ip()
         
@@ -91,22 +115,30 @@ class StatusDisplay:
         self.warning_text = "Varningstext"
         
     def draw_filled_rect(self, x0, y0, x1, y1, color):
+        """Draws a filled rectangle in the LED display"""
+
         for y in range(y0,y1+1):
             self.graphics.DrawLine(self.canvas, x0, y, x1, y, color)
         
     def draw_rect(self, x0, y0, x1, y1, color):
+        """Draw a rectangle in the LED display"""
+
         self.graphics.DrawLine(self.canvas, x0, y0, x1, y0, color)
         self.graphics.DrawLine(self.canvas, x0, y1, x1, y1, color)
         self.graphics.DrawLine(self.canvas, x0, y0, x0, y1, color)
         self.graphics.DrawLine(self.canvas, x1, y0, x1, y1, color)
 
     def draw_time_left(self, text, value):
+        """Draw time left as a bar"""
+
         self.draw_filled_rect(64, 0, 127, 31, self.training_back)
         self.draw_filled_rect(64, 0, 64+value, 31, self.training_bar)
         self.graphics.DrawText(self.canvas, self.font, 64+2, 12, self.training_text, text)
         self.graphics.DrawText(self.canvas, self.font, 64+2, 31, self.training_text, str(value))
         
     def draw_time(self):
+        """Draw current time in the LED display"""
+
         self.draw_rect(0, 0, 127, 31, self.time_color)
         self.draw_rect(1, 1, 126, 30, self.time_color)
         now = datetime.now()
@@ -114,7 +146,8 @@ class StatusDisplay:
         self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.time_color, time_str)
         
     def draw_half_hour(self):
-        #self.draw_rect(0, 0, 63, 31, self.time_color)
+        """Draw time left in half-hour practice sessions."""
+
         now = datetime.now()
         
         minute = now.minute
@@ -123,11 +156,8 @@ class StatusDisplay:
         else:
             left_minutes = 60 - minute
             
-        #print(minute, now.second)
         
         left_seconds = 59-now.second
-        #if left_seconds == 60:
-        #    left_seconds = 0
                 
         time_str = "%02i:%02i" % (left_minutes, left_seconds)
 
@@ -142,7 +172,8 @@ class StatusDisplay:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
 
     def draw_twenty_minutes(self):
-        #self.draw_rect(0, 0, 63, 31, self.time_color)
+        """Draw time left in 20-minute practice sessions."""
+
         now = datetime.now()
         
         minute = now.minute
@@ -152,12 +183,8 @@ class StatusDisplay:
             left_minutes = 40 - minute
         else:
             left_minutes = 60 - minute
-            
-        #print(minute, now.second)
-        
+                  
         left_seconds = 59-now.second
-        #if left_seconds == 60:
-        #    left_seconds = 0
                 
         time_str = "%02i:%02i" % (left_minutes, left_seconds)
 
@@ -172,12 +199,14 @@ class StatusDisplay:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
 
     def draw_line_angular(self, x0, y0, r, angle, color):
+        """Draw angular line in LED display"""
         x1 = x0 + r*cos(angle)
         y1 = y0 + r*sin(angle)
 
         self.graphics.DrawLine(self.canvas, x0, y0, x1, y1, color)
 
     def draw_clock(self):
+        """Draw analog clock in LED display."""
 
         now = datetime.now()
         hour = now.hour
@@ -194,8 +223,6 @@ class StatusDisplay:
         minute_angle = minute*2.0*pi/60.0 - 0.5*pi
         second_angle = second*2.0*pi/60.0 - 0.5*pi
 
-        #print(hour_angle*360/2/pi, minute_angle*360/2/pi)
-
         self.draw_line_angular(x0, y0, 10, second_angle, self.second_color)
         self.draw_line_angular(x0, y0, 10, minute_angle, self.minute_color)
         self.draw_line_angular(x0, y0+1, 10, minute_angle, self.minute_color)
@@ -204,9 +231,9 @@ class StatusDisplay:
         self.draw_line_angular(x0, y0+1, 8, hour_angle, self.hour_color)
         self.draw_line_angular(x0+1, y0, 8, hour_angle, self.hour_color)
 
-        #graphics.DrawCircle(self.canvas, 32*3+19, 12, 11, self.time_color)
-
     def draw_timing(self):
+        """Draw time since start of timing."""
+
         now = datetime.now()
 
         elapsed_time = now - self.timing_start
@@ -220,8 +247,9 @@ class StatusDisplay:
 
         self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
 
-
     def draw_time_date(self):
+        """Draw time and date in the LED display."""
+
         now = datetime.now()
         time_str = now.strftime("%H:%M:%S")
         date_str = now.strftime("%y-%m-%d")
@@ -229,30 +257,40 @@ class StatusDisplay:
         self.graphics.DrawText(self.canvas, self.font, 0, 31, self.time_color, date_str)
 
     def draw_info_text(self):
+        """Draw information text."""
+
         self.draw_filled_rect(0, 0, 127, 31, self.info_background)
         self.graphics.DrawText(self.canvas, self.large_font, 10, 22, self.info_color, self.info_text)
         self.draw_rect(0, 0, 127, 31, self.info_color)
         self.draw_rect(1, 1, 126, 30, self.info_color)
     
     def draw_warn_text(self):
+        """Draw warning text"""
+
         self.draw_filled_rect(0, 0, 127, 31, self.warn_background)
         self.graphics.DrawText(self.canvas, self.large_font, 10, 22, self.warn_color, self.warning_text)
         self.draw_rect(0, 0, 127, 31, self.warn_border)
         self.draw_rect(1, 1, 126, 30, self.warn_border)
 
     def draw_startup(self):
+        """Draw startup screen with ip and version."""
+
         self.ip = get_ip()
         self.graphics.DrawText(self.canvas, self.font, 4, 11, self.time_color, self.ip+":5000")
         self.graphics.DrawText(self.canvas, self.font, 4, 30, self.time_color, "mxdisplay-"+self.MX_VERSION)
 
     def draw_lap_left(self, laps_left, offset):
+        """Draw laps left sign"""
         self.draw_filled_rect(0, 0, 127, 31, self.white)
         self.graphics.DrawText(self.canvas, self.extra_large_font, 20+offset, 28, self.black, str(laps_left)+" VARV")
 
     def draw_time_qualify(self):
+        """Draw time qualify in sign"""
+
         self.graphics.DrawText(self.canvas, self.extra_large_font, 10, 28, self.white, "Tidskval")
 
     def draw_finish(self, invert=False):
+        """Draw finish flag"""
         
         if invert:
             offset = 8
@@ -271,6 +309,8 @@ class StatusDisplay:
                 self.graphics.DrawLine(self.canvas, x+offset, y, x+(sq_size-1)+offset, y, self.white)
 
     def draw(self):
+        """Main draw routine of the display."""
+        
         if self._display_mode == StatusDisplay.DM_TIME_LEFT:
             self.draw_half_hour()
             self.draw_clock()
@@ -305,18 +345,27 @@ class StatusDisplay:
             self.draw_timing()
 
     def reset_timing(self):
+        """Reset timing to zero."""
+
         self.timing_start = datetime.now()
 
     def set_display_mode(self, mode):
+        """Display mode setter"""
+
         self._display_mode = mode
 
     def get_display_mode(self):
+        """Display mode getter"""
         return self._display_mode
 
     display_mode = property(get_display_mode, set_display_mode)
 
 class MxDisplay(SampleBase):
+    """Class implementing the display server"""
+
     def __init__(self, *args, **kwargs):
+        """Class constructor"""
+        
         super(MxDisplay, self).__init__(*args, **kwargs)
 
         self.context = zmq.Context()
@@ -324,6 +373,8 @@ class MxDisplay(SampleBase):
         self.socket.bind("tcp://*:5555")
 
     def run(self):
+        """Main run loop of the server."""
+
         offscreen_canvas = self.matrix.CreateFrameCanvas()
         
         status_display = StatusDisplay(offscreen_canvas, graphics)
