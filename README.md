@@ -27,21 +27,21 @@ You will need the following hardware to implement the sign:
 
 # Installation
 
-1. Install and build the rpi-rgb-led-matrix library
-2. Install Flask (Flask)
-3. Install ZeroMQ (pyzmq)
+ 1. Install and build the rpi-rgb-led-matrix library
+ 1. Install Flask (Flask)
+ 1. Install ZeroMQ (pyzmq)
 
 ## Installing services:
 
 From the source directory:
 
-  sudo cp mx-screen.service /etc/systemd/system/mx-screen.service
-  sudo cp mx-web.service /etc/systemd/system/mx-web.service
-  sudo systemctl daemon-reload
-  sudo systemctl enable mx-screen.service
-  sudo systemctl enable mx-web.service
-  sudo systemctl start mx-screen
-  sudo systemctl start mx-web
+    sudo cp mx-screen.service /etc/systemd/system/mx-screen.service
+    sudo cp mx-web.service /etc/systemd/system/mx-web.service
+    sudo systemctl daemon-reload
+    sudo systemctl enable mx-screen.service
+    sudo systemctl enable mx-web.service
+    sudo systemctl start mx-screen
+    sudo systemctl start mx-web
   
 This should make the display- and web-server start automatically at reboot
 
