@@ -35,9 +35,10 @@ class StatusDisplay:
     DM_FINISH = 9
     DM_TIME_QUALIFY = 10
     DM_TIME_LEFT_20 = 11
+    DM_TIMING = 12
 
 
-    MX_VERSION = "1.0.2"
+    MX_VERSION = "1.0.3"
 
     def __init__(self, canvas, graphics):
 
@@ -45,7 +46,7 @@ class StatusDisplay:
         
         print(self.ip)
 
-        self.display_mode = StatusDisplay.DM_STARTUP
+        self._display_mode = StatusDisplay.DM_STARTUP
         self.default_mode = StatusDisplay.DM_TIME_LEFT
         self.canvas = canvas
         self.graphics = graphics
@@ -53,6 +54,8 @@ class StatusDisplay:
         self.elapsed_time = 0.0
         self.startup_delay = 60
         self.startup_finished = False
+
+        self.timing_start = datetime.now()
 
         self.font = self.graphics.Font()
         self.font.LoadFont("fonts/7x13.bdf")
@@ -203,6 +206,20 @@ class StatusDisplay:
 
         #graphics.DrawCircle(self.canvas, 32*3+19, 12, 11, self.time_color)
 
+    def draw_timing(self):
+        now = datetime.now()
+
+        elapsed_time = now - self.timing_start
+
+        seconds = elapsed_time.total_seconds()
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60        
+                      
+        time_str = "%02i:%02i" % (minutes, seconds)
+
+        self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+
 
     def draw_time_date(self):
         now = datetime.now()
@@ -254,36 +271,49 @@ class StatusDisplay:
                 self.graphics.DrawLine(self.canvas, x+offset, y, x+(sq_size-1)+offset, y, self.white)
 
     def draw(self):
-        if self.display_mode == StatusDisplay.DM_TIME_LEFT:
+        if self._display_mode == StatusDisplay.DM_TIME_LEFT:
             self.draw_half_hour()
             self.draw_clock()
-        elif self.display_mode == StatusDisplay.DM_TIME_LEFT_20:
+        elif self._display_mode == StatusDisplay.DM_TIME_LEFT_20:
             self.draw_twenty_minutes()
             self.draw_clock()
-        elif self.display_mode == StatusDisplay.DM_CLOSED:
+        elif self._display_mode == StatusDisplay.DM_CLOSED:
             pass
-        elif self.display_mode == StatusDisplay.DM_TIME:
+        elif self._display_mode == StatusDisplay.DM_TIME:
             self.draw_time()
-        elif self.display_mode == StatusDisplay.DM_INFO_TEXT:
+        elif self._display_mode == StatusDisplay.DM_INFO_TEXT:
             self.draw_info_text()
-        elif self.display_mode == StatusDisplay.DM_WARNING_TEXT:
+        elif self._display_mode == StatusDisplay.DM_WARNING_TEXT:
             self.draw_warn_text()
-        elif self.display_mode == StatusDisplay.DM_STARTUP:
+        elif self._display_mode == StatusDisplay.DM_STARTUP:
             self.draw_startup()
-        elif self.display_mode == StatusDisplay.DM_OFF:
+        elif self._display_mode == StatusDisplay.DM_OFF:
             pass
-        elif self.display_mode == StatusDisplay.DM_ONE_LAP:
+        elif self._display_mode == StatusDisplay.DM_ONE_LAP:
             self.draw_lap_left(1, 0)
-        elif self.display_mode == StatusDisplay.DM_TWO_LAP:
+        elif self._display_mode == StatusDisplay.DM_TWO_LAP:
             self.draw_lap_left(2, -3)
-        elif self.display_mode == StatusDisplay.DM_FINISH:
+        elif self._display_mode == StatusDisplay.DM_FINISH:
             now = datetime.now()
             if now.second % 2 == 0:
                 self.draw_finish(True)
             else:
                 self.draw_finish(False)
-        elif self.display_mode == StatusDisplay.DM_TIME_QUALIFY:
+        elif self._display_mode == StatusDisplay.DM_TIME_QUALIFY:
             self.draw_time_qualify()
+        elif self._display_mode == StatusDisplay.DM_TIMING:
+            self.draw_timing()
+
+    def reset_timing(self):
+        self.timing_start = datetime.now()
+
+    def set_display_mode(self, mode):
+        self._display_mode = mode
+
+    def get_display_mode(self):
+        return self._display_mode
+
+    display_mode = property(get_display_mode, set_display_mode)
 
 class MxDisplay(SampleBase):
     def __init__(self, *args, **kwargs):
@@ -354,6 +384,13 @@ class MxDisplay(SampleBase):
                     print("Text received: ", text)
                     status_display.warning_text = text
                     status_display.display_mode = StatusDisplay.DM_WARNING_TEXT
+                elif message == "timing":
+                    print("Switching to DM_TIMING")
+                    status_display.display_mode = StatusDisplay.DM_TIMING
+                elif message == "reset_timing":
+                    print("Resetting timing")
+                    status_display.reset_timing()
+                    status_display.display_mode = StatusDisplay.DM_TIMING
 
                 self.socket.send_string("OK")
             except zmq.Again as e:
