@@ -51,7 +51,12 @@ At startup the system will display its ip- and port number for 30-seconds in the
 
 PLEASE NOTE: There is no security. The web-server is non-authenticated. The display-server only listens to localhost. The project is meant to be run in a controlled environment.
 
-  
+# Usage
 
+When installed the web-server is available at the ip-number of your raspberry pi (shown on LED display at startup) at port 5000. 
+
+Example: http://x.x.x.x:5000
+
+Currently the web-interface is in swedish. User interface can be changed by editing the index.html in the templates directory of the source tree.
 
 
