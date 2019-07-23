@@ -57,6 +57,6 @@ When installed the web-server is available at the ip-number of your raspberry pi
 
 Example: http://x.x.x.x:5000
 
-Currently the web-interface is in swedish. User interface can be changed by editing the index.html in the templates directory of the source tree.
+Currently the web-interface is in swedish. However, the user interface can be changed by editing the index.html in the templates directory of the source tree.
 
 
