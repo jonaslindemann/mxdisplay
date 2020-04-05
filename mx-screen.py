@@ -61,7 +61,7 @@ class StatusDisplay:
     DM_TIME_LEFT_20 = 11
     DM_TIMING = 12
 
-    MX_VERSION = "1.0.3"
+    MX_VERSION = "1.0.4"
 
     def __init__(self, canvas, graphics):
         """Class constructor"""
@@ -144,59 +144,123 @@ class StatusDisplay:
         now = datetime.now()
         time_str = now.strftime("%H:%M:%S")
         self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.time_color, time_str)
+
+    def draw_arrow_forward(self, color):
+
+        x0 = 32*3+19
+        al = 8
+        m = 8
+
+        self.graphics.DrawLine(self.canvas, x0-1, m, x0-1, 32-m, color)
+        self.graphics.DrawLine(self.canvas, x0, m, x0, 32-m, color)
+        self.graphics.DrawLine(self.canvas, x0+1, m, x0+1, 32-m, color)
+
+        self.graphics.DrawLine(self.canvas, x0 - 1, m, x0-1 + al, m + al, color)
+        self.graphics.DrawLine(self.canvas, x0, m, x0 + al, m + al, color)
+        self.graphics.DrawLine(self.canvas, x0 + 1, m, x0 + 1 + al, m + al, color)
+
+        self.graphics.DrawLine(self.canvas, x0 - 1, m, x0 - 1 - al, m + al, color)
+        self.graphics.DrawLine(self.canvas, x0, m, x0 - al, m + al, color)
+        self.graphics.DrawLine(self.canvas, x0 + 1, m, x0 + 1 - al, m + al, color)
         
+    def draw_arrow_right(self, color):
+
+        x0 = 32*3
+        y0 = 15
+        al = 8
+        m = 8
+
+        self.graphics.DrawLine(self.canvas, x0 + m, y0 - 1, x0 + 32 - m, y0 - 1, color)
+        self.graphics.DrawLine(self.canvas, x0 + m, y0, x0 + 32 - m, y0, color)
+        self.graphics.DrawLine(self.canvas, x0 + m, y0 + 1, x0 + 32 - m, y0 + 1, color)
+
+        self.graphics.DrawLine(self.canvas, x0 + 32 - m, y0 - 1, x0 + 32 - m - al, y0 - 1 - al, color)
+        self.graphics.DrawLine(self.canvas, x0 + 32 - m, y0, x0 + 32 - m - al, y0 - al, color)
+        self.graphics.DrawLine(self.canvas, x0 + 32 - m, y0 + 1, x0 + 32 - m - al, y0 + 1 - al, color)
+
+        self.graphics.DrawLine(self.canvas, x0 + 32 - m, y0 - 1, x0 + 32 - m - al, y0 - 1 + al, color)
+        self.graphics.DrawLine(self.canvas, x0 + 32 - m, y0, x0 + 32 - m - al, y0 + al, color)
+        self.graphics.DrawLine(self.canvas, x0 + 32 - m, y0 + 1, x0 + 32 - m - al, y0 + 1 + al, color)
+
     def draw_half_hour(self):
         """Draw time left in half-hour practice sessions."""
 
         now = datetime.now()
-        
-        minute = now.minute
-        if minute <= 30:
-            left_minutes = 30 - minute
-        else:
-            left_minutes = 60 - minute
-            
-        
-        left_seconds = 59-now.second
-                
-        time_str = "%02i:%02i" % (left_minutes, left_seconds)
+        now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
 
-        seconds_left = left_minutes*60.0 + left_seconds
+        min30 = datetime(2020, 1, 1, now_modified.hour, 29, 59)
+        min00 = datetime(2020, 1, 1, now_modified.hour, 59, 59)
+
+        left30 = min30 - now_modified
+        left00 = min00 - now_modified
+
+        m30, s30 = divmod(left30.seconds, 60)
+        h30, m30 = divmod(m30, 60)    
+        m00, s00 = divmod(left00.seconds, 60)
+        h00, m00 = divmod(m00, 60)    
+
+        if (m30<m00):
+            time_str = '{:02d}:{:02d}'.format(m30, s30)
+            left_minutes = m30
+        else:
+            time_str = '{:02d}:{:02d}'.format(m00, s00)
+            left_minutes = m00
 
         if left_minutes > 1:
             self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+            self.draw_arrow_forward(self.time_color)
         else:
             if now.second % 2 == 0:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+                self.draw_arrow_right(self.time_color)
             else:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
+                self.draw_arrow_right(self.time_over_color)
 
     def draw_twenty_minutes(self):
         """Draw time left in 20-minute practice sessions."""
 
         now = datetime.now()
-        
-        minute = now.minute
-        if minute <= 20:
-            left_minutes = 20 - minute
-        elif minute <= 40:
-            left_minutes = 40 - minute
-        else:
-            left_minutes = 60 - minute
-                  
-        left_seconds = 59-now.second
-                
-        time_str = "%02i:%02i" % (left_minutes, left_seconds)
+        now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
 
-        seconds_left = left_minutes*60.0 + left_seconds
+        min20 = datetime(2020, 1, 1, now_modified.hour, 19, 59)
+        min40 = datetime(2020, 1, 1, now_modified.hour, 39, 59)
+        min00 = datetime(2020, 1, 1, now_modified.hour, 59, 59)
+
+        left20 = min20 - now_modified
+        left40 = min40 - now_modified
+        left00 = min00 - now_modified
+
+        m20, s20 = divmod(left20.seconds, 60)
+        h20, m20 = divmod(m20, 60)    
+        m40, s40 = divmod(left40.seconds, 60)
+        h40, m40 = divmod(m40, 60)    
+        m00, s00 = divmod(left00.seconds, 60)
+        h00, m00 = divmod(m00, 60)    
+
+        m = min(m00, m20, m40)
+  
+        if (m20 == m):
+            time_str = '{:02d}:{:02d}'.format(m20, s20)
+            left_minutes = m20
+        elif (m40 == m):
+            time_str = '{:02d}:{:02d}'.format(m40, s40)
+            left_minutes = m40
+        else:
+            time_str = '{:02d}:{:02d}'.format(m00, s00)
+            left_minutes = m00
+
 
         if left_minutes > 1:
             self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+            self.draw_arrow_forward(self.time_color)
         else:
             if now.second % 2 == 0:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+                self.draw_arrow_right(self.time_color)
             else:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
+                self.draw_arrow_right(self.time_over_color)
 
     def draw_line_angular(self, x0, y0, r, angle, color):
         """Draw angular line in LED display"""
@@ -313,10 +377,8 @@ class StatusDisplay:
         
         if self._display_mode == StatusDisplay.DM_TIME_LEFT:
             self.draw_half_hour()
-            self.draw_clock()
         elif self._display_mode == StatusDisplay.DM_TIME_LEFT_20:
             self.draw_twenty_minutes()
-            self.draw_clock()
         elif self._display_mode == StatusDisplay.DM_CLOSED:
             pass
         elif self._display_mode == StatusDisplay.DM_TIME:

@@ -6,7 +6,7 @@ This module implements a flask web-server for controlling the display.
 """
 
 #
-# Copyright 2019 Jonas Lindemann
+# Copyright 2019-2020 Jonas Lindemann
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
