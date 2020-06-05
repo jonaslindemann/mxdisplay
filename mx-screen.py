@@ -64,7 +64,7 @@ class StatusDisplay:
     DM_TIME_LEFT_25_35_HALF = 14
     DM_TIMING = 12
 
-    MX_VERSION = "1.0.5"
+    MX_VERSION = "1.0.6"
 
     def __init__(self, canvas, graphics):
         """Class constructor"""
