@@ -8,7 +8,7 @@ using ZeroMQ.
 """
 
 #
-# Copyright 2019 Jonas Lindemann
+# Copyright 2019-2020 Jonas Lindemann
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,16 +58,22 @@ class StatusDisplay:
     DM_TWO_LAP = 8
     DM_FINISH = 9
     DM_TIME_QUALIFY = 10
-    DM_TIME_LEFT_20 = 11
+    DM_TIME_LEFT_20_FULL = 11
+    DM_TIME_LEFT_20_HALF = 15
+    DM_TIME_LEFT_25_35_FULL = 13
+    DM_TIME_LEFT_25_35_HALF = 14
     DM_TIMING = 12
 
-    MX_VERSION = "1.0.4"
+    MX_VERSION = "1.0.5"
 
     def __init__(self, canvas, graphics):
         """Class constructor"""
 
         self.ip = get_ip()
-        
+
+        self.debug_datetime = datetime(2020, 1, 1, 17, 24, 00)
+        self.debug = False
+
         print(self.ip)
 
         self._display_mode = StatusDisplay.DM_STARTUP
@@ -113,6 +119,12 @@ class StatusDisplay:
 
         self.info_text = "Infotext"
         self.warning_text = "Varningstext"
+
+    def current_time(self):
+        if self.debug:
+            return self.debug_datetime
+        else:
+            return datetime.now()
         
     def draw_filled_rect(self, x0, y0, x1, y1, color):
         """Draws a filled rectangle in the LED display"""
@@ -141,7 +153,7 @@ class StatusDisplay:
 
         self.draw_rect(0, 0, 127, 31, self.time_color)
         self.draw_rect(1, 1, 126, 30, self.time_color)
-        now = datetime.now()
+        now = self.current_time()
         time_str = now.strftime("%H:%M:%S")
         self.graphics.DrawText(self.canvas, self.extra_large_font, 6, 28, self.time_color, time_str)
 
@@ -185,7 +197,7 @@ class StatusDisplay:
     def draw_half_hour(self):
         """Draw time left in half-hour practice sessions."""
 
-        now = datetime.now()
+        now = self.current_time()
         now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
 
         min30 = datetime(2020, 1, 1, now_modified.hour, 29, 59)
@@ -217,15 +229,130 @@ class StatusDisplay:
                 self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
                 self.draw_arrow_right(self.time_over_color)
 
-    def draw_twenty_minutes(self):
+    def draw_25_35_full(self):
+        """Draw time left in half-hour practice sessions."""
+
+        now = self.current_time()
+        now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
+
+        min25 = datetime(2020, 1, 1, now_modified.hour, 24, 59)
+        min00 = datetime(2020, 1, 1, now_modified.hour, 59, 59)
+
+        left25 = min25 - now_modified
+        left00 = min00 - now_modified
+
+        m25, s25 = divmod(left25.seconds, 60)
+        h25, m25 = divmod(m25, 60)    
+        m00, s00 = divmod(left00.seconds, 60)
+        h00, m00 = divmod(m00, 60)    
+
+        if (m25<m00):
+            time_str = '{:02d}:{:02d}'.format(m25, s25)
+            left_minutes = m25
+        else:
+            time_str = '{:02d}:{:02d}'.format(m00, s00)
+            left_minutes = m00
+
+        if left_minutes > 1:
+            self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+            self.draw_arrow_forward(self.time_color)
+        else:
+            if now.second % 2 == 0:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+                self.draw_arrow_right(self.time_color)
+            else:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
+                self.draw_arrow_right(self.time_over_color)
+
+    def draw_25_35_half(self):
+        """Draw time left in half-hour practice sessions."""
+
+        now = self.current_time()
+        now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
+
+        min25 = datetime(2020, 1, 1, now_modified.hour, 54, 59)
+        min00 = datetime(2020, 1, 1, now_modified.hour, 29, 59)
+
+        left25 = min25 - now_modified
+        left00 = min00 - now_modified
+
+        m25, s25 = divmod(left25.seconds, 60)
+        h25, m25 = divmod(m25, 60)    
+        m00, s00 = divmod(left00.seconds, 60)
+        h00, m00 = divmod(m00, 60)    
+
+        if (m25<m00):
+            time_str = '{:02d}:{:02d}'.format(m25, s25)
+            left_minutes = m25
+        else:
+            time_str = '{:02d}:{:02d}'.format(m00, s00)
+            left_minutes = m00
+
+        if left_minutes > 1:
+            self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+            self.draw_arrow_forward(self.time_color)
+        else:
+            if now.second % 2 == 0:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+                self.draw_arrow_right(self.time_color)
+            else:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
+                self.draw_arrow_right(self.time_over_color)
+
+    def draw_twenty_minutes_full(self):
         """Draw time left in 20-minute practice sessions."""
 
-        now = datetime.now()
+        now = self.current_time()
         now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
 
         min20 = datetime(2020, 1, 1, now_modified.hour, 19, 59)
         min40 = datetime(2020, 1, 1, now_modified.hour, 39, 59)
         min00 = datetime(2020, 1, 1, now_modified.hour, 59, 59)
+
+        left20 = min20 - now_modified
+        left40 = min40 - now_modified
+        left00 = min00 - now_modified
+
+        m20, s20 = divmod(left20.seconds, 60)
+        h20, m20 = divmod(m20, 60)    
+        m40, s40 = divmod(left40.seconds, 60)
+        h40, m40 = divmod(m40, 60)    
+        m00, s00 = divmod(left00.seconds, 60)
+        h00, m00 = divmod(m00, 60)    
+
+        m = min(m00, m20, m40)
+  
+        if (m20 == m):
+            time_str = '{:02d}:{:02d}'.format(m20, s20)
+            left_minutes = m20
+        elif (m40 == m):
+            time_str = '{:02d}:{:02d}'.format(m40, s40)
+            left_minutes = m40
+        else:
+            time_str = '{:02d}:{:02d}'.format(m00, s00)
+            left_minutes = m00
+
+
+        if left_minutes > 1:
+            self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+            self.draw_arrow_forward(self.time_color)
+        else:
+            if now.second % 2 == 0:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_color, time_str)
+                self.draw_arrow_right(self.time_color)
+            else:
+                self.graphics.DrawText(self.canvas, self.huge_font, 0, 32, self.time_over_color, time_str)
+                self.draw_arrow_right(self.time_over_color)
+
+    def draw_twenty_minutes_half(self):
+        """Draw time left in 20-minute practice sessions."""
+
+        now = self.current_time()
+        now_modified = datetime(2020, 1, 1, now.hour, now.minute, now.second)
+
+        min20 = datetime(2020, 1, 1, now_modified.hour, 49, 59)
+        min40 = datetime(2020, 1, 1, now_modified.hour, 9, 59)
+        min00 = datetime(2020, 1, 1, now_modified.hour, 29, 59)
 
         left20 = min20 - now_modified
         left40 = min40 - now_modified
@@ -272,7 +399,7 @@ class StatusDisplay:
     def draw_clock(self):
         """Draw analog clock in LED display."""
 
-        now = datetime.now()
+        now = self.current_time()
         hour = now.hour
         minute = now.minute
         second = now.second
@@ -298,7 +425,7 @@ class StatusDisplay:
     def draw_timing(self):
         """Draw time since start of timing."""
 
-        now = datetime.now()
+        now = self.current_time()
 
         elapsed_time = now - self.timing_start
 
@@ -314,7 +441,7 @@ class StatusDisplay:
     def draw_time_date(self):
         """Draw time and date in the LED display."""
 
-        now = datetime.now()
+        now = self.current_time()
         time_str = now.strftime("%H:%M:%S")
         date_str = now.strftime("%y-%m-%d")
         self.graphics.DrawText(self.canvas, self.font, 0, 12, self.time_color, time_str)
@@ -345,7 +472,7 @@ class StatusDisplay:
 
     def draw_lap_left(self, laps_left, offset):
         """Draw laps left sign"""
-        self.draw_filled_rect(0, 0, 127, 31, self.white)
+        self.draw_filled_rect(31, 0, 95, 31, self.white)
         self.graphics.DrawText(self.canvas, self.extra_large_font, 20+offset, 28, self.black, str(laps_left)+" VARV")
 
     def draw_time_qualify(self):
@@ -377,8 +504,14 @@ class StatusDisplay:
         
         if self._display_mode == StatusDisplay.DM_TIME_LEFT:
             self.draw_half_hour()
-        elif self._display_mode == StatusDisplay.DM_TIME_LEFT_20:
-            self.draw_twenty_minutes()
+        elif self._display_mode == StatusDisplay.DM_TIME_LEFT_20_FULL:
+            self.draw_twenty_minutes_full()
+        elif self._display_mode == StatusDisplay.DM_TIME_LEFT_20_HALF:
+            self.draw_twenty_minutes_half()
+        elif self._display_mode == StatusDisplay.DM_TIME_LEFT_25_35_FULL:
+            self.draw_25_35_full()
+        elif self._display_mode == StatusDisplay.DM_TIME_LEFT_25_35_HALF:
+            self.draw_25_35_half()
         elif self._display_mode == StatusDisplay.DM_CLOSED:
             pass
         elif self._display_mode == StatusDisplay.DM_TIME:
@@ -409,7 +542,7 @@ class StatusDisplay:
     def reset_timing(self):
         """Reset timing to zero."""
 
-        self.timing_start = datetime.now()
+        self.timing_start = self.current_time()
 
     def set_display_mode(self, mode):
         """Display mode setter"""
@@ -441,6 +574,8 @@ class MxDisplay(SampleBase):
         
         status_display = StatusDisplay(offscreen_canvas, graphics)
         status_display.display_mode = StatusDisplay.DM_STARTUP
+        #status_display.debug = False
+        #status_display.debug_datetime = datetime(2020, 1, 1, 17, 51, 00)
 
         while True:
 
@@ -455,7 +590,16 @@ class MxDisplay(SampleBase):
                     status_display.display_mode = StatusDisplay.DM_TIME_LEFT
                 elif message == "time_left_twenty":
                     print("Switching to DM_TIME_LEFT")
-                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_20
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_20_FULL
+                elif message == "time_left_twenty_half":
+                    print("Switching to DM_TIME_LEFT")
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_20_HALF
+                elif message == "time_left_25_35_full":
+                    print("Switching to DM_TIME_25_35_FULL")
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_25_35_FULL
+                elif message == "time_left_25_35_half":
+                    print("Switching to DM_TIME_25_35_HALF")
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_25_35_HALF
                 elif message == "time":
                     print("Switching to DM_TIME")
                     status_display.display_mode = StatusDisplay.DM_TIME
