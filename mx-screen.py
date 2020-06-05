@@ -662,8 +662,12 @@ class MxDisplay(SampleBase):
             # to default mode
             
             if (status_display.elapsed_time > status_display.startup_delay) and not status_display.startup_finished:
-               status_display.startup_finished = True 
-               status_display.display_mode = status_display.default_mode
+                status_display.startup_finished = True 
+                now = datetime.now()
+                if (now.hour>16):
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT
+                else:
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT
             
             time.sleep(0.1)
             status_display.elapsed_time += 0.1
