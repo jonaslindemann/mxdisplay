@@ -64,7 +64,7 @@ class StatusDisplay:
     DM_TIME_LEFT_25_35_HALF = 14
     DM_TIMING = 12
 
-    MX_VERSION = "1.0.6"
+    MX_VERSION = "1.0.7"
 
     def __init__(self, canvas, graphics):
         """Class constructor"""
@@ -123,7 +123,7 @@ class StatusDisplay:
     def current_time(self):
         if self.debug:
             return self.debug_datetime
-        else:
+        else: 
             return datetime.now()
         
     def draw_filled_rect(self, x0, y0, x1, y1, color):
@@ -567,6 +567,8 @@ class MxDisplay(SampleBase):
         self.socket = self.context.socket(zmq.REP)
         self.socket.bind("tcp://*:5555")
 
+        self.mode_text = ""
+
     def run(self):
         """Main run loop of the server."""
 
@@ -576,6 +578,7 @@ class MxDisplay(SampleBase):
         status_display.display_mode = StatusDisplay.DM_STARTUP
         #status_display.debug = False
         #status_display.debug_datetime = datetime(2020, 1, 1, 17, 51, 00)
+
 
         while True:
 
@@ -648,8 +651,41 @@ class MxDisplay(SampleBase):
                     print("Resetting timing")
                     status_display.reset_timing()
                     status_display.display_mode = StatusDisplay.DM_TIMING
+                elif message == "status":
+                    print("Sending status")
 
-                self.socket.send_string("OK")
+                if status_display.display_mode == StatusDisplay.DM_TIME_LEFT_20_FULL:
+                    self.mode_text = "20 min / 20 min / 20 min (heltimme)"
+                elif status_display.display_mode == StatusDisplay.DM_TIME_LEFT_20_HALF:
+                    self.mode_text = "20 min / 20 min / 20 min (halvtimme)"
+                elif status_display.display_mode == StatusDisplay.DM_TIME_LEFT_25_35_FULL:
+                    self.mode_text = "25 min / 35 min (heltimme)"
+                elif status_display.display_mode == StatusDisplay.DM_TIME_LEFT_25_35_HALF:
+                    self.mode_text = "25 min / 35 min (halvtimme)"
+                elif status_display.display_mode == StatusDisplay.DM_TIME_LEFT:
+                    self.mode_text = "30 min / 30 min"
+                elif status_display.display_mode == StatusDisplay.DM_TIME:
+                    self.mode_text = "Tidvisning"
+                elif status_display.display_mode == StatusDisplay.DM_OFF:
+                    self.mode_text = "Display avstängd"
+                elif status_display.display_mode == StatusDisplay.DM_INFO_TEXT:
+                    self.mode_text = "Infotext visad"
+                elif status_display.display_mode == StatusDisplay.DM_WARNING_TEXT:
+                    self.mode_text = "Varningstext visad"
+                elif status_display.display_mode == StatusDisplay.DM_ONE_LAP:
+                    self.mode_text = "1-varv"
+                elif status_display.display_mode == StatusDisplay.DM_TWO_LAP:
+                    self.mode_text = "2-varv"
+                elif status_display.display_mode == StatusDisplay.DM_FINISH:
+                    self.mode_text = "Målflagg"
+                elif status_display.display_mode == StatusDisplay.DM_TIME_QUALIFY:
+                    self.mode_text = "Kvalificering"
+                elif status_display.display_mode == StatusDisplay.DM_STARTUP:
+                    self.mode_text = "Uppstart"
+                elif status_display.display_mode == StatusDisplay.DM_TIMING:
+                    self.mode_text = "Tidtagning"
+
+                self.socket.send_string("OK,%s" % (self.mode_text))
             except zmq.Again as e:
                 pass
 
@@ -665,9 +701,9 @@ class MxDisplay(SampleBase):
                 status_display.startup_finished = True 
                 now = datetime.now()
                 if (now.hour>16):
-                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_25_35_HALF
                 else:
-                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT
+                    status_display.display_mode = StatusDisplay.DM_TIME_LEFT_25_35_FULL
             
             time.sleep(0.1)
             status_display.elapsed_time += 0.1

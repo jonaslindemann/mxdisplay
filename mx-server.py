@@ -30,7 +30,26 @@ app = Flask(__name__)
 def start_page():
     """Render server start page."""
 
-    return render_template('index.html')
+    context = zmq.Context()
+    socket = context.socket(zmq.REQ)
+    
+    print("Connecting to MX-sign server...")
+    socket.connect("tcp://localhost:5555")
+
+    socket.send_string("status")
+    message = socket.recv_string()
+    print("Message received: ", message)
+
+    mode_text = ""
+
+    try:
+        mode_text = message.split(",")[1]
+    except:
+        pass
+
+    socket.close()
+
+    return render_template('index.html', mode_text=mode_text)
 
 @app.route('/set_info_text', methods=['GET', 'POST'])
 def set_info_text():
@@ -52,9 +71,15 @@ def set_info_text():
         message = socket.recv_string()
         print("Message received: ", message)
 
+        mode_text = ""
+        try:
+            mode_text = message.split(",")[1]
+        except:
+            pass
+
         socket.close()
 
-        return render_template('index.html')
+        return render_template('index.html', mode_text=mode_text)
     else:
         return render_template('index.html')
         
@@ -79,9 +104,16 @@ def set_warn_text():
         message = socket.recv_string()
         print("Message received: ", message)
 
+        mode_text = ""
+
+        try:
+            mode_text = message.split(",")[1]
+        except:
+            pass
+
         socket.close()
 
-        return render_template('index.html')
+        return render_template('index.html', mode_text=mode_text)
     else:
         return render_template('index.html')
 
@@ -99,6 +131,13 @@ def command(cmd):
     message = socket.recv_string()
     print("Message received: ", message)
 
+    mode_text = ""
+
+    try:
+        mode_text = message.split(",")[1]
+    except:
+        pass
+
     socket.close()
 
-    return redirect(url_for('start_page'))
+    return redirect(url_for('start_page', mode_text=mode_text))
