@@ -3,7 +3,7 @@ Description=MX-Display
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 -u mx-screen.py --led-cols=128 --led-rows=32 -c 1
+ExecStart=/usr/bin/python3 -u mx-screen.py --led-cols=32 --led-rows=32 --led-chain=4 --led-gpio-mapping=adafruit-hat --led-slowdown-gpio=3 -c 1
 WorkingDirectory=/home/pi/Development/mxdisplay
 StandardOutput=inherit
 StandardError=inherit

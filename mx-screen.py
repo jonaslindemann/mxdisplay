@@ -8,7 +8,7 @@ using ZeroMQ.
 """
 
 #
-# Copyright 2019-2020 Jonas Lindemann
+# Copyright 2019-2021 Jonas Lindemann
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ class StatusDisplay:
     DM_TIME_LEFT_25_35_HALF = 14
     DM_TIMING = 12
 
-    MX_VERSION = "1.0.7"
+    MX_VERSION = "1.0.8"
 
     def __init__(self, canvas, graphics):
         """Class constructor"""
@@ -110,7 +110,8 @@ class StatusDisplay:
         self.training_back = graphics.Color(128, 0, 0)
         self.training_bar = graphics.Color(0, 255, 0)      
         self.training_text = graphics.Color(0, 0, 0)  
-        self.white = graphics.Color(230,230,230)
+        self.white = graphics.Color(230, 230, 230)
+        self.white_safe = graphics.Color(230, 230, 230)
         self.black = graphics.Color(0,0,0)
 
         self.hour_color = graphics.Color(255,0,0)    
@@ -472,7 +473,7 @@ class StatusDisplay:
 
     def draw_lap_left(self, laps_left, offset):
         """Draw laps left sign"""
-        self.draw_filled_rect(31, 0, 95, 31, self.white)
+        self.draw_filled_rect(0, 0, 127, 31, self.white_safe)
         self.graphics.DrawText(self.canvas, self.extra_large_font, 20+offset, 28, self.black, str(laps_left)+" VARV")
 
     def draw_time_qualify(self):
